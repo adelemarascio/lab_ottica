@@ -48,7 +48,7 @@ Double_t x, y;
     }
     std::cout<<max_x<<"     "<<max_y<<'\n';
 
-TF1 *f = new TF1("f", funzione, 0.045, 0.075 ,2);
+TF1 *f = new TF1("f", funzione, 0.045, 0.07 ,2);
 f->SetParameter(0,max_y);
 f->SetParLimits(0,max_y-1,max_y+1);
 f->SetParameter(1,max_x);
