@@ -1,42 +1,47 @@
+#include <cmath>
 #include <iostream>
-#include "TROOT.h"
-#include "TStyle.h"
-#include "TH1F.h"
+
+#include "TFile.h"
+#include "TH1D.h"
+#include "TF1.h"
+#include "TMath.h"
 #include "TRandom.h"
 #include "TCanvas.h"
-#include "TMath.h"
-#include "TF1.h"
-#include "TLegend.h"
-#include "TMatrixD.h"
-#include "TFitResult.h"
-#include "TFile.h"
+#include "TGraphErrors.h"
 
 
-void setStyle1(){
-  gROOT->SetStyle("Plain");
-  gStyle->SetPalette(57);
-  gStyle->SetOptTitle(0);
-}
+Double_t singola(Double_t *x, Double_t *par)
+{
+ Double_t L=1.135;
+ Double_t d = 0.06E-3;  
+ Double_t k= 9.92918E6;
 
-Double_t singola(Double_t *x, Double_t *par){
- Double_t xx=x[0];
- Double_t theta = TMath::ATan((TMath::Abs(par[4]-xx))/par[0]);
- Double_t arg = par[1]*par[2]*TMath::Sin(theta)/2.;
- Double_t val = sin(arg)/arg;
- return par[3]*TMath::pow(val,2);
+ Double_t xx=(TMath::Abs(par[0]-x[0]));
+ Double_t theta = TMath::ATan(xx/L);
+ Double_t args = k*d*TMath::Sin(theta)/2.;
+ Double_t val = sin(args)/args;
+ return par[1]*pow(val,2);
 }
 
 
 void grafico(){
+ 
+ gStyle->SetOptStat(2210);
+ gStyle->SetOptFit(1111);
+ gStyle->SetFitFormat("7.6g");
 
- TGraphErrors * graph =new TGraphErrors ("singerrore", "%lg %lg %lg");
+ TCanvas *c1 = new TCanvas("c1","Singola Fenditura");
+
+ TGraphErrors * graph =new TGraphErrors ("singerrore", "%lg %lg %*lg %lg");
     
- graph->SetTitle("Diffrazione da fenditura singola ;Distanza (m);Ampiezza");
+ graph->GetXaxis()->SetTitle("Posizione (m)");
+ graph->GetYaxis()->SetTitle("Intensita' luminosa (u arbitraria)");
+ graph->SetTitle("Singola fenditura 5");
  graph->SetMarkerStyle(kOpenCircle);
  graph->SetMarkerColor(kBlue);
  graph->SetLineColor(kBlue);
 
- Double_t x, y, e;
+ Double_t x, y;
     graph->GetPoint(0, x, y);
     Double_t max_x = x, max_y = y;
     for(int i = 1; i < graph->GetN(); i++)
@@ -48,24 +53,14 @@ void grafico(){
     }
     std::cout<<max_x<<"     "<<max_y<<'\n';
   
- Double_t L=1.135;
- Double_t lambda=632.8E-9;
- //Double_t k=(2*TMath::Pi())/lambda;
- Double_t d = 0.15E-3; 
- Double_t D = 0.75E-3; 
- Double_t k= 9.92918E6;
   
- TF1 *f = new TF1("f",singola,0.014, 0.099950,3);
- f->SetParameters(0, d);
- f->SetParameters(1, k);
- f->SetParameters(2, L);
- 
- f->SetParameters(3, max_y);
- f->SetParLimits(3,max_y-1,max_y+1);
- f->SetParameters(4, max_x);
- f->SetParLimits(3,max_x-0.001,max_x+0.001);
+ TF1 *f = new TF1("f",singola,0.01400, 0.099950, 3);
 
- TCanvas *c1 = new TCanvas("c1","Singola Fenditura",200,10,600,400);
+ f->SetParameters(0, max_x);
+ f->SetParLimits(0, max_x-0.0001,max_x+0.0001);
+ f->SetParameters(1, max_y);
+ f->SetParLimits(1, max_y-1,max_y+1);
+ 
  f->SetLineColor(kRed); f->SetLineStyle(1);
 
  graph->GetXaxis()->SetRangeUser(0.014, 0.1);
